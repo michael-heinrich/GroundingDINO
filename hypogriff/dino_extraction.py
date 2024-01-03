@@ -85,6 +85,16 @@ class DinoExtraction:
                 'rays': [],
             })
 
+        # append another box with 'null' phrase and confidence 1 for the whole image
+        phrase_dict['null'] = [{
+            'x1Rel': 0,
+            'y1Rel': 0,
+            'x2Rel': 1,
+            'y2Rel': 1,
+            'c': 1,
+            'rays': [],
+        }]
+
         return phrase_dict
     
     def make_on_message(self):
@@ -197,6 +207,9 @@ class DinoExtraction:
                     ray_density = 100
                     n_rays = int(areaRel * ray_density)
 
+                    # at least ten rays
+                    n_rays = max(n_rays, 10)
+
                     for i in range(n_rays):
                         # get a random point in the box
                         xRel = np.random.uniform(x1Rel, x2Rel)
@@ -207,7 +220,7 @@ class DinoExtraction:
 
                         # convert the point to normalized device coordinates
                         xNdc = 2 * xRel - 1
-                        yNdc = 2 * yRel - 1
+                        yNdc = -2 * yRel + 1
 
                         # convert the point to a ray
                         (origin, dir) = caster.normalized_device_coords_to_ray(xNdc, yNdc)
