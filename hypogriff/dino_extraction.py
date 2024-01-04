@@ -119,10 +119,21 @@ class DinoExtraction:
             
             named_rectangles = image_data['namedRectangles']
 
+            gimbal = named_rectangles['gimbal']
             left_boom = named_rectangles['left-boom']
+            right_boom = named_rectangles['right-boom']
+
 
             if not left_boom:
                 print("Error: Could not find left boom.")
+                return
+            
+            if not right_boom:
+                print("Error: Could not find right boom.")
+                return
+            
+            if not gimbal:
+                print("Error: Could not find gimbal.")
                 return
             
             print("Received left boom image.")
@@ -137,15 +148,22 @@ class DinoExtraction:
             # find the viewInfos for the left and right boom
             left_view_info = None
             right_view_info = None
+            gimbal_view_info = None
 
             for view_info in view_infos:
                 if view_info['name'] == 'left-boom':
                     left_view_info = view_info
                 elif view_info['name'] == 'right-boom':
                     right_view_info = view_info
+                elif view_info['name'] == 'gimbal':
+                    gimbal_view_info = view_info
 
             if not left_view_info or not right_view_info:
                 print("Error: Could not find view infos for left or right boom.")
+                return
+            
+            if not gimbal_view_info:
+                print("Error: Could not find view info for gimbal.")
                 return
 
             # the images are already decoded, so we can just pass them to extracat_dino_features
@@ -157,37 +175,55 @@ class DinoExtraction:
                 print("Error: Could not find DINO prompt for left boom.")
                 return
             
-            phrase_dict = this_dino.extract_dino_features(left_boom, left_dino_prompt)
-
-            # get the dimensions of the left and right images
-            left_width, left_height = left_boom.size
-
-            # print that we are happy
-            print("DINO grounding extracted.")
-
             
 
-            left_fov = left_view_info['fov']
-            right_fov = right_view_info['fov']
 
-            left_position = left_view_info['positionBodyFrame']
-            right_position = right_view_info['positionBodyFrame']
-
-            left_axis = left_view_info['axisBodyFrame']
-            right_axis = right_view_info['axisBodyFrame']
-
-            left_up = left_view_info['upBodyFrame']
-            right_up = right_view_info['upBodyFrame']
-
+            gimbal_matrix_world = gimbal_view_info['matrixWorldColumnMajor']
             left_matrix_world = left_view_info['matrixWorldColumnMajor']
             right_matrix_world = right_view_info['matrixWorldColumnMajor']
 
+            gimbal_projection_matrix_inverse = gimbal_view_info['projectionMatrixInverseColumnMajor']
             left_projection_matrix_inverse = left_view_info['projectionMatrixInverseColumnMajor']
             right_projection_matrix_inverse = right_view_info['projectionMatrixInverseColumnMajor']
 
-    
+            left_boom_data = {
+                'image': left_boom,
+                'matrix_world': left_matrix_world,
+                'projection_matrix_inverse': left_projection_matrix_inverse
+            }
 
-            caster = RayCaster(left_matrix_world, left_projection_matrix_inverse, left_width, left_height)
+            right_boom_data = {
+                'image': right_boom,
+                'matrix_world': right_matrix_world,
+                'projection_matrix_inverse': right_projection_matrix_inverse
+            }
+
+            gimbal_data = {
+                'image': gimbal,
+                'matrix_world': gimbal_matrix_world,
+                'projection_matrix_inverse': gimbal_projection_matrix_inverse
+            }
+
+            # select one of the images to use for semantic analysis
+            # image_data = left_boom_data
+            image_data = gimbal_data
+
+            selected_matrix_world = image_data['matrix_world']
+            selected_projection_matrix_inverse = image_data['projection_matrix_inverse']
+            selected_image = image_data['image']
+            # get the dimensions of the selected image
+            selected_width, selected_height = selected_image.size
+
+    
+            phrase_dict = this_dino.extract_dino_features(selected_image, left_dino_prompt)
+            
+            # print that we are happy
+            print("DINO grounding extracted.")
+
+
+
+            # caster = RayCaster(left_matrix_world, left_projection_matrix_inverse, left_width, left_height)
+            caster = RayCaster(selected_matrix_world, selected_projection_matrix_inverse, selected_width, selected_height)
 
             # iterate over the phrases
             for phrase in phrase_dict:
@@ -216,7 +252,7 @@ class DinoExtraction:
                         yRel = np.random.uniform(y1Rel, y2Rel)
 
                         # read the color of the pixel
-                        color = left_boom.getpixel((xRel * left_width, yRel * left_height))
+                        color = selected_image.getpixel((xRel * selected_width, yRel * selected_height))
 
                         # convert the point to normalized device coordinates
                         xNdc = 2 * xRel - 1
@@ -238,7 +274,7 @@ class DinoExtraction:
             if dino_callback:
                 # print("Calling stereo callback.")
                 # await stereo_callback(point_cloud)
-                await dino_callback(phrase_dict, left_matrix_world)
+                await dino_callback(phrase_dict, selected_matrix_world)
 
 
 
