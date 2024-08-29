@@ -204,7 +204,8 @@ if __name__ == "__main__":
             exists = os.path.exists(json_path)
 
             wait_because_no_file = not exists
-            wait_because_no_change = already_checked_time and exists and os.path.getmtime(json_path) == last_change_time
+            wait_because_no_change = already_checked_time and exists and os.path.getmtime(
+                json_path) == last_change_time
 
             wait_now = wait_because_no_file or wait_because_no_change
 
@@ -214,7 +215,6 @@ if __name__ == "__main__":
                 continue
 
             last_change_time = os.path.getmtime(json_path)
-
 
             jobs = []
 
@@ -237,7 +237,8 @@ if __name__ == "__main__":
                 image_path = job["image_path"]
                 text_prompt = job["text_prompt"]
 
-                print(f"    Processing image: {image_path} with text prompt: {text_prompt}")
+                print(
+                    f"    Processing image: {image_path} with text prompt: {text_prompt}")
 
                 # make dir
                 os.makedirs(output_dir, exist_ok=True)
@@ -249,8 +250,6 @@ if __name__ == "__main__":
                 if token_spans is not None:
                     text_threshold = None
                     print("Using token_spans. Set the text_threshold to None.")
-
-
 
                 # run model
                 boxes_filt, pred_phrases = get_grounding_output(
@@ -269,7 +268,8 @@ if __name__ == "__main__":
                 image_with_box = plot_boxes_to_image(image_pil, pred_dict)[0]
 
                 # fixed width index with three zeros
-                image_with_box.save(os.path.join(output_dir, f"{job_title}_pred{index:03}.jpg"))
+                image_with_box.save(os.path.join(
+                    output_dir, f"{job_title}_pred{index:03}.jpg"))
 
                 serializable_boxes = boxes_filt.tolist()
 
@@ -279,13 +279,18 @@ if __name__ == "__main__":
                     "labels": pred_phrases
                 }
 
-
-            result_json_path = os.path.join(output_dir, f"{job_title}_result.json")
+            result_json_path = os.path.join(
+                output_dir, f"{job_title}_result.json")
             # save json object
 
             try:
-                with open(result_json_path, "w") as f:
+                tmp_json_path = result_json_path + ".tmp"
+
+                with open(tmp_json_path, "w") as f:
                     json.dump(json_obj, f, indent=4)
+
+                # atomic rename to avoid reading incomplete file
+                os.rename(tmp_json_path, result_json_path)
             except Exception as e:
                 print(f"Error saving json file: {e}")
                 time.sleep(1)
@@ -294,4 +299,3 @@ if __name__ == "__main__":
             print(f"Error processing job: {job_title}")
             time.sleep(1)
             continue
-
