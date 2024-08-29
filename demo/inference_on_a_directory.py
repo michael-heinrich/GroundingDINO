@@ -9,9 +9,9 @@ import torch
 from PIL import Image, ImageDraw, ImageFont
 
 # add ./groundingdino to the path (where . is pwd)
-pwd = os.getcwd()
-print(f"Adding {pwd} to the path")
-sys.path.append(pwd)
+# pwd = os.getcwd()
+# print(f"Adding {pwd} to the path")
+# sys.path.append(pwd)
 
 import groundingdino.datasets.transforms as T
 from groundingdino.models import build_model
@@ -182,18 +182,28 @@ if __name__ == "__main__":
 
     parser.add_argument("--cpu-only", action="store_true",
                         help="running on cpu only!, default=False")
-    args = parser.parse_args()
+    # args = parser.parse_args()
+# 
+    # # cfg
+    # config_file = args.config_file  # change the path of the model config file
+    # checkpoint_path = args.checkpoint_path  # change the path of the model
+    # json_path = args.json_path
+    # output_dir = args.output_dir
+    # box_threshold = args.box_threshold
+    # text_threshold = args.text_threshold
+    # token_spans = args.token_spans
 
-    # cfg
-    config_file = args.config_file  # change the path of the model config file
-    checkpoint_path = args.checkpoint_path  # change the path of the model
-    json_path = args.json_path
-    output_dir = args.output_dir
-    box_threshold = args.box_threshold
-    text_threshold = args.text_threshold
-    token_spans = args.token_spans
+    config_file = "groundingdino/config/GroundingDINO_SwinT_OGC.py"
+    checkpoint_path = "weights/groundingdino_swint_ogc.pth"
+    json_path = "input/jobs.json"
+    output_dir = "output"
+    box_threshold = 0.3
+    text_threshold = 0.25
+    token_spans = None
+    cpu_only = False
 
-    model = load_model(config_file, checkpoint_path, cpu_only=args.cpu_only)
+
+    model = load_model(config_file, checkpoint_path, cpu_only=cpu_only)
 
     last_change_time = None
 
@@ -215,8 +225,8 @@ if __name__ == "__main__":
             wait_now = wait_because_no_file or wait_because_no_change
 
             if wait_now:
-                print("Waiting for the json file to be created or modified...")
-                time.sleep(1)
+                # print("Waiting for the json file to be created or modified...")
+                time.sleep(0.1)
                 continue
 
             last_change_time = os.path.getmtime(json_path)
@@ -258,7 +268,7 @@ if __name__ == "__main__":
 
                 # run model
                 boxes_filt, pred_phrases = get_grounding_output(
-                    model, image, text_prompt, box_threshold, text_threshold, cpu_only=args.cpu_only, token_spans=eval(
+                    model, image, text_prompt, box_threshold, text_threshold, cpu_only=cpu_only, token_spans=eval(
                         f"{token_spans}")
                 )
 
