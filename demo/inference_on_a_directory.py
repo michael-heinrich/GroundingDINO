@@ -8,6 +8,9 @@ import numpy as np
 import torch
 from PIL import Image, ImageDraw, ImageFont
 
+# add ./groundingdino to the path (where . is pwd)
+sys.path.append(os.path.join(os.getcwd(), "groundingdino"))
+
 import groundingdino.datasets.transforms as T
 from groundingdino.models import build_model
 from groundingdino.util import box_ops
