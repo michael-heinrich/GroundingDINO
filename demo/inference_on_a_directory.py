@@ -295,7 +295,8 @@ if __name__ == "__main__":
                 print(f"Error saving json file: {e}")
                 time.sleep(1)
                 continue
-        except:
+        except Exception as e:
             print(f"Error processing job: {job_title}")
+            print(e)
             time.sleep(1)
             continue
