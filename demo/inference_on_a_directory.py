@@ -229,11 +229,15 @@ if __name__ == "__main__":
                 time.sleep(1)
                 continue
 
+            print(f"Processing job: {job_title}")
+
             # iterate over jobs and index
             for index, job in enumerate(jobs):
                 file_name = "job_" + str(index)
                 image_path = job["image_path"]
                 text_prompt = job["text_prompt"]
+
+                print(f"    Processing image: {image_path} with text prompt: {text_prompt}")
 
                 # make dir
                 os.makedirs(output_dir, exist_ok=True)
@@ -245,6 +249,8 @@ if __name__ == "__main__":
                 if token_spans is not None:
                     text_threshold = None
                     print("Using token_spans. Set the text_threshold to None.")
+
+
 
                 # run model
                 boxes_filt, pred_phrases = get_grounding_output(

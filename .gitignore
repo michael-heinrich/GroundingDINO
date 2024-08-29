@@ -141,6 +141,13 @@ logs/
 
 grounding/config/configs
 grounding/version.py
+groundingdino/version.py
+
 
 vis/
 tmp/
+
+
+input/
+out/
+weights/
