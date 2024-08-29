@@ -9,7 +9,10 @@ import torch
 from PIL import Image, ImageDraw, ImageFont
 
 # add ./groundingdino to the path (where . is pwd)
-sys.path.append(os.path.join(os.getcwd(), "groundingdino"))
+pwd = os.getcwd()
+additional_path = os.path.join(pwd, "groundingdino")
+print(f"Adding {additional_path} to the path")
+sys.path.append(additional_path)
 
 import groundingdino.datasets.transforms as T
 from groundingdino.models import build_model
